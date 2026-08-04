@@ -232,12 +232,6 @@ The TensorBoard dashboard below shows the progression of training and validation
        width="100%">
 </p>
 
-### Training Progress
-
-The TensorBoard curves below show the model’s training and validation accuracy and loss throughout training.
-
-![TensorBoard training and validation metrics](assets/images/tensorboard-training-metrics.png)
-
 ## Installation
 
 **Requirements:** Python 3.11, Node.js 20+, and a webcam. An NVIDIA GPU is
