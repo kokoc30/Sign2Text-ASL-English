@@ -78,7 +78,14 @@ import pandas as pd
 # (LetterMLP replaced the cheap LogisticRegression) so the same cap applies.
 import torch
 torch.set_num_threads(1)
-torch.set_num_interop_threads(1)
+# See the matching note in backend/api_server.py: set_num_interop_threads() is
+# once-per-process and raises RuntimeError on a second call, so importing both
+# services into one process (or reloading this one) would otherwise fail at
+# import time. The first call wins; the single-thread cap still applies.
+try:
+    torch.set_num_interop_threads(1)
+except RuntimeError:
+    pass
 cv2.setNumThreads(1)
 
 import uvicorn

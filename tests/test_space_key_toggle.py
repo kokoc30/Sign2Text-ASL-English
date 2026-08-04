@@ -1,17 +1,22 @@
 """
-Static structural checks for the Space-key NO-OP contract in frontend/app.js.
+Static structural checks for the Space-key NO-OP contract in frontend/web/app.js.
 
 Space must be a true no-op in the live app: no pipeline control, no mode
 switching, and no native focused-button activation. These are source-pattern
 assertions, not runtime behavior tests. No JS test infrastructure exists in
 this repo, so this is the smallest realistic automated validation available.
 Manual browser testing is required for full runtime verification.
+
+Path note: the web frontend lives at ``frontend/web/``. This module previously
+pointed at ``frontend/app.js``, a location that predates that move, and so
+failed at collection with FileNotFoundError rather than actually checking
+anything. The assertions below are unchanged — only the path was corrected.
 """
 
 import re
 from pathlib import Path
 
-APP_JS = Path(__file__).parent.parent / "frontend" / "app.js"
+APP_JS = Path(__file__).parent.parent / "frontend" / "web" / "app.js"
 
 
 def _keydown_block(src: str) -> str:

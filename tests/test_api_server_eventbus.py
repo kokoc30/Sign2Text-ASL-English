@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import queue
 from datetime import datetime
 
 import pytest
@@ -18,17 +19,46 @@ def _api_server_ml_stubs(ensure_api_server_importable):
     ensure_api_server_importable()
 
 
-def test_event_bus_replays_recent_events_to_new_subscribers(load_module):
+def test_event_bus_replays_recent_state_events_to_new_subscribers(load_module):
+    """State-snapshot events are replayed so a reconnecting client catches up."""
+    api_server = load_module("api_server")
+    bus = api_server.EventBus(maxsize=2)
+    bus.publish("pipeline_started", {"profile": "cpu"})
+
+    subscriber = bus.subscribe()
+    event = subscriber.get_nowait()
+
+    assert event["event"] == "pipeline_started"
+    assert event["data"] == {"profile": "cpu"}
+    datetime.fromisoformat(event["timestamp"])
+
+
+def test_event_bus_does_not_replay_append_style_events(load_module):
+    """Append-style events must never be replayed to a re-subscribing client.
+
+    Replaying them duplicated transcript entries: switching asl -> letter -> asl
+    quickly re-opens the SSE stream, and a replayed `translation` / `caption.final`
+    made the frontend append an already-signed word a second time. `EventBus`
+    therefore records only `_REPLAYABLE_EVENT_TYPES` for catch-up.
+
+    This module previously asserted that `translation` *was* replayed — exactly
+    the behaviour the allowlist was introduced to remove — so the assertion has
+    been re-pointed at the current contract rather than dropped.
+    """
     api_server = load_module("api_server")
     bus = api_server.EventBus(maxsize=2)
     bus.publish("translation", {"english": "Hello"})
 
     subscriber = bus.subscribe()
-    event = subscriber.get_nowait()
+    with pytest.raises(queue.Empty):
+        subscriber.get_nowait()
 
-    assert event["event"] == "translation"
-    assert event["data"] == {"english": "Hello"}
-    datetime.fromisoformat(event["timestamp"])
+    # Suppression applies to replay only — a live subscriber still receives it.
+    live = bus.subscribe()
+    bus.publish("translation", {"english": "Hello again"})
+    delivered = live.get_nowait()
+    assert delivered["event"] == "translation"
+    assert delivered["data"] == {"english": "Hello again"}
 
 
 def test_event_bus_drops_subscribers_with_full_queues(load_module):

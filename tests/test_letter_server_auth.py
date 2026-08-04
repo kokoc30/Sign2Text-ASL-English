@@ -8,6 +8,13 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
+# Excluded from the blocking public scope — same reasons as
+# tests/test_api_server_auth.py: these drive the real Letter app through its
+# lifespan, which needs the excluded letter-model weights and camera access,
+# and they assert the pre-migration cookie-session contract rather than the
+# published Supabase JWT guard. See docs/TESTING_STATUS.md.
+pytestmark = pytest.mark.requires_private_assets
+
 
 def _load(monkeypatch, load_module):
     letter_server = load_module("letter_server")

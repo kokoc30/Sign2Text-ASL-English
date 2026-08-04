@@ -175,6 +175,12 @@ def test_start_server_uses_dotenv_remote_mode_to_skip_local_ollama(
     assert _read_log(tmp_path / "ollama.log") == ""
 
 
+# setup_runpod.sh is private GPU-host provisioning tooling and is deliberately
+# not published (README, "Known public-release limitations"). The script is not
+# recreated here: a stub wrapper would make this test pass while asserting
+# nothing about real behaviour. The equivalent test above, for the PUBLISHED
+# start_server.sh, remains in the blocking scope.
+@pytest.mark.requires_private_assets
 def test_setup_runpod_uses_dotenv_remote_mode_to_skip_local_ollama(
     tmp_path, bash_path
 ):

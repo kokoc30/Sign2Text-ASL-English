@@ -164,6 +164,29 @@ class _FakeWS:
 
 
 class TestGetUserFromWs:
+    """Token handling for WebSocket connections.
+
+    `get_user_from_ws` short-circuits to an anonymous principal whenever
+    SUPABASE_ENABLED is not truthy, so the app runs locally without a Supabase
+    project. These tests exercise the *token* path and therefore enable auth
+    explicitly; `test_anonymous_principal_when_auth_disabled` covers the other
+    branch, so both halves of the documented contract are pinned.
+    """
+
+    @pytest.fixture(autouse=True)
+    def _enable_auth(self, monkeypatch):
+        monkeypatch.setenv("SUPABASE_ENABLED", "1")
+        monkeypatch.setenv("SUPABASE_URL", "https://example.supabase.co")
+
+    def test_anonymous_principal_when_auth_disabled(self, monkeypatch, load_module):
+        monkeypatch.delenv("SUPABASE_ENABLED", raising=False)
+        mod = load_module("auth_supabase")
+        assert mod.get_user_from_ws(_FakeWS()) == {
+            "sub": "anon",
+            "email": None,
+            "role": "anon",
+        }
+
     def test_returns_none_when_no_token_anywhere(self, load_module):
         mod = load_module("auth_supabase")
         assert mod.get_user_from_ws(_FakeWS()) is None

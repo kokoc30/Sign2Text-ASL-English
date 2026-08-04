@@ -1,63 +1,139 @@
 """Unit tests for AslOutputValidator and AslFallbackNormalizer.
 
-Heavy ML imports (rtmlib, cv2, torch, numpy) are stubbed out so these tests
-run without a GPU / ML environment installed.
+`new_Inference` imports the heavy ML stack (torch, numpy, cv2, rtmlib) at module
+scope, but the two classes under test here are pure text logic. So that these
+tests still run in a minimal environment, any of those packages that is genuinely
+not installed is replaced by a small stub.
+
+Isolation contract
+------------------
+Stubs are installed by an autouse fixture and removed again on teardown, even if
+an assertion fails. Specifically:
+
+* The real package is imported first; a stub is only ever used when the real
+  import raises ImportError. In the pinned CI environment all four packages are
+  installed, so no stub is created at all.
+* Every `sys.modules` entry this module creates is recorded and restored to its
+  exact previous value (including "was absent") afterwards.
+* Any backend module imported while a stub was active is evicted, so a later
+  test re-imports it against the real packages rather than reusing a module
+  object bound to stub types.
+
+This matters because `backend/api_server.py` and `backend/letter_server.py` call
+`torch.set_num_threads(1)` at import time. A leaked torch stub without that
+attribute previously broke every module that imported a service afterwards — 59
+failures across 8 modules, purely as an artefact of test ordering.
 """
 from __future__ import annotations
 
+import importlib
 import sys
 import types
 from unittest.mock import MagicMock
 
+import pytest
 
-def _stub_heavy_imports():
-    """Insert minimal stubs for ML packages not needed by the normalisation classes."""
+# sys.modules keys this module may create, in deletion-safe order.
+_STUBBED_NAMES = ("torch.nn.functional", "torch.nn", "torch", "numpy", "rtmlib", "cv2")
 
-    # ── torch ──────────────────────────────────────────────────────────────
-    if "torch" not in sys.modules:
-        # torch.nn.Module is needed as a base class for NN models in the file
-        class _FakeModule:
-            def __init__(self, *a, **kw): pass
-            def __init_subclass__(cls, **kw): pass
-
-        nn_mod = types.ModuleType("torch.nn")
-        nn_mod.Module = _FakeModule
-        nn_mod.Linear = _FakeModule
-        nn_mod.GELU = _FakeModule
-        nn_mod.LayerNorm = _FakeModule
-        nn_mod.Dropout = _FakeModule
-        nn_mod.functional = types.ModuleType("torch.nn.functional")
-
-        mock_torch = types.ModuleType("torch")
-        mock_torch.__version__ = "0.0.0"
-        mock_torch.cuda = types.SimpleNamespace(
-            is_available=lambda: False,
-            get_device_name=lambda _i: None,
-        )
-        mock_torch.nn = nn_mod
-        mock_torch.Tensor = object
-        mock_torch.zeros = lambda *a, **kw: None
-        mock_torch.float32 = "float32"
-        mock_torch.no_grad = lambda: MagicMock(__enter__=lambda s, *a: None, __exit__=lambda s, *a: None)
-
-        sys.modules["torch"] = mock_torch
-        sys.modules["torch.nn"] = nn_mod
-        sys.modules["torch.nn.functional"] = nn_mod.functional
-
-    # ── numpy ──────────────────────────────────────────────────────────────
-    if "numpy" not in sys.modules:
-        mock_np = MagicMock()
-        mock_np.ndarray = list
-        mock_np.float32 = float
-        sys.modules["numpy"] = mock_np
-
-    # ── others ─────────────────────────────────────────────────────────────
-    for name in ("rtmlib", "cv2"):
-        if name not in sys.modules:
-            sys.modules[name] = MagicMock()
+# Module prefixes that bind to the heavy packages at import time and must be
+# dropped if they were imported while a stub was active.
+_BACKEND_PREFIXES = ("new_Inference", "api_server", "letter_server", "backend")
 
 
-_stub_heavy_imports()
+def _build_torch_stub():
+    """Minimal torch surface needed to import `new_Inference`."""
+
+    class _FakeModule:
+        def __init__(self, *a, **kw): pass
+        def __init_subclass__(cls, **kw): pass
+
+    nn_mod = types.ModuleType("torch.nn")
+    nn_mod.Module = _FakeModule
+    nn_mod.Linear = _FakeModule
+    nn_mod.GELU = _FakeModule
+    nn_mod.LayerNorm = _FakeModule
+    nn_mod.Dropout = _FakeModule
+    nn_func = types.ModuleType("torch.nn.functional")
+    nn_mod.functional = nn_func
+
+    mock_torch = types.ModuleType("torch")
+    mock_torch.__version__ = "0.0.0"
+    mock_torch.cuda = types.SimpleNamespace(
+        is_available=lambda: False,
+        get_device_name=lambda _i: None,
+    )
+    mock_torch.nn = nn_mod
+    mock_torch.Tensor = object
+    mock_torch.zeros = lambda *a, **kw: None
+    mock_torch.float32 = "float32"
+    mock_torch.no_grad = lambda: MagicMock(
+        __enter__=lambda s, *a: None, __exit__=lambda s, *a: None
+    )
+    # The services configure threading at import time. Include these so a stub
+    # can never reproduce the historical AttributeError cascade.
+    mock_torch.set_num_threads = lambda _n: None
+    mock_torch.set_num_interop_threads = lambda _n: None
+
+    return {"torch": mock_torch, "torch.nn": nn_mod, "torch.nn.functional": nn_func}
+
+
+def _stub_if_unavailable(name, factory):
+    """Return {name: module} stubs only when the real package cannot be imported."""
+    if name in sys.modules:
+        return {}
+    try:
+        importlib.import_module(name)
+    except ImportError:
+        return factory()
+    return {}
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _heavy_import_stubs():
+    """Install stubs for missing ML packages, then restore process state exactly."""
+    previous = {name: sys.modules.get(name) for name in _STUBBED_NAMES}
+    was_present = {name: name in sys.modules for name in _STUBBED_NAMES}
+    modules_before = set(sys.modules)
+
+    installed: list[str] = []
+    try:
+        stubs = {}
+        stubs.update(_stub_if_unavailable("torch", _build_torch_stub))
+        stubs.update(_stub_if_unavailable(
+            "numpy", lambda: {"numpy": _numpy_stub()}))
+        for pkg in ("rtmlib", "cv2"):
+            stubs.update(_stub_if_unavailable(pkg, lambda p=pkg: {p: MagicMock()}))
+
+        for name, module in stubs.items():
+            sys.modules[name] = module
+            installed.append(name)
+
+        yield
+    finally:
+        if installed:
+            # Drop anything imported against the stubs so later tests re-import
+            # cleanly against the real packages.
+            for name in set(sys.modules) - modules_before:
+                if name.split(".")[0] in _BACKEND_PREFIXES:
+                    sys.modules.pop(name, None)
+
+            for name in _STUBBED_NAMES:
+                if name not in installed:
+                    continue
+                if was_present[name]:
+                    sys.modules[name] = previous[name]
+                else:
+                    sys.modules.pop(name, None)
+
+            importlib.invalidate_caches()
+
+
+def _numpy_stub():
+    mock_np = MagicMock()
+    mock_np.ndarray = list
+    mock_np.float32 = float
+    return mock_np
 
 
 def test_validator_rejects_overly_long_output(load_module):

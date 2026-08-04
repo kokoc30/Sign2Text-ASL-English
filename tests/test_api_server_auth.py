@@ -9,6 +9,21 @@ import pytest
 from fastapi.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
+# Excluded from the blocking public scope.
+#
+# Every test here builds a TestClient over the real ASL app, which runs the
+# FastAPI lifespan: it opens the host camera, contacts an Ollama endpoint, and
+# starts the inference thread, which loads
+# backend/checkpoint/.../best_model.pt. That checkpoint is intentionally not
+# published (README, "Known public-release limitations") and CI runners have no
+# camera, so these cannot pass here regardless of their assertions — locally
+# they hang for minutes on hardware and network access.
+#
+# They also assert the pre-migration cookie-session contract (401 with detail
+# "Not authenticated"); the published guard is Supabase JWT. Rewriting them
+# against the JWT contract is tracked in docs/TESTING_STATUS.md.
+pytestmark = pytest.mark.requires_private_assets
+
 
 @pytest.fixture(autouse=True)
 def _api_server_ml_stubs(ensure_api_server_importable):

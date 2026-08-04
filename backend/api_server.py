@@ -84,7 +84,16 @@ import torch
 # each at 30fps). Diagnosed with scripts/repro_cpu_spike.py: same Python
 # code on torch 2.6 = 1.3% machine; on torch 2.10 = 29.5% machine.
 torch.set_num_threads(1)
-torch.set_num_interop_threads(1)
+# set_num_interop_threads() may only be called once per process, and only
+# before any parallel work has started; a second call raises RuntimeError.
+# set_num_threads() carries no such restriction. Importing this module in the
+# same process as backend/letter_server.py (which applies the same cap), or
+# reloading it, would otherwise abort at import time. The first call wins, so
+# tolerating the error leaves the intended single-thread cap in place.
+try:
+    torch.set_num_interop_threads(1)
+except RuntimeError:
+    pass
 # OpenCV is also a noticeable thread-pool offender for cvtColor/resize on
 # 640x480 frames. Bound to a single thread for the same reason — frames are
 # small and per-call overhead of orchestrating a parallel job exceeds the

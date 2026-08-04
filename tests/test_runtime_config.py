@@ -18,9 +18,14 @@ def test_load_runtime_config_resolves_relative_checkpoint_and_port_overrides(
     assert config.asl_checkpoint_path == str(
         (tmp_path / "models" / "best_model.pt").resolve()
     )
+    # frontend_app_config always emits KEYPOINTS_ENABLED so the browser knows
+    # whether to render the skeleton overlay. The expected dicts below were
+    # updated to the current contract; they remain strict equality assertions
+    # rather than being relaxed to subset checks.
     assert config.frontend_app_config == {
         "ASL_PORT": 9000,
         "VOICE_PORT": 9001,
+        "KEYPOINTS_ENABLED": False,
     }
 
 
@@ -44,6 +49,7 @@ def test_load_runtime_config_with_public_host_generates_frontend_overrides(
         "ASL_BACKEND": "https://captions.example.test:8000",
         "BACKEND": "https://captions.example.test:8001",
         "LETTER_BACKEND": "https://captions.example.test:8002",
+        "KEYPOINTS_ENABLED": False,
     }
     # ADMIN_BACKEND is NOT emitted from public_host_explicit alone — it requires
     # ADMIN_API_BASE_URL to be explicitly set to avoid emitting an unreachable derived URL.
@@ -71,6 +77,7 @@ def test_load_runtime_config_preserves_same_origin_path_overrides(
     assert config.frontend_app_config == {
         "ASL_BACKEND": "/asl",
         "BACKEND": "/",
+        "KEYPOINTS_ENABLED": False,
     }
 
 
@@ -86,6 +93,7 @@ def test_load_runtime_config_with_admin_port_override(tmp_path, load_module):
     assert config.admin_api_base_url == "http://127.0.0.1:9003"
     assert config.frontend_app_config == {
         "ADMIN_PORT": 9003,
+        "KEYPOINTS_ENABLED": False,
     }
 
 
@@ -101,6 +109,7 @@ def test_load_runtime_config_with_explicit_admin_base_url(tmp_path, load_module)
     assert config.admin_api_base_url_explicit is True
     assert config.frontend_app_config == {
         "ADMIN_BACKEND": "https://admin.example.test/api",
+        "KEYPOINTS_ENABLED": False,
     }
 
 
@@ -135,6 +144,7 @@ def test_proxy_mode_path_overrides_cover_all_services(tmp_path, load_module):
         "BACKEND_WS_URL": "/voice-api/ws/stt",
         "LETTER_BACKEND": "/letter-api",
         "ADMIN_BACKEND": "/admin-api",
+        "KEYPOINTS_ENABLED": False,
     }
 
 
@@ -282,13 +292,27 @@ def test_supabase_fields_never_in_frontend_app_config(tmp_path, load_module):
         },
     )
     app_config = config.frontend_app_config
-    for key in app_config:
-        assert "supabase" not in key.lower(), (
-            f"Supabase field {key!r} leaked into frontend_app_config"
-        )
     js = runtime_config.render_frontend_runtime_config_js(config)
-    assert "supabase" not in js.lower()
-    assert "test-key-value" not in js
+
+    # The security invariant is that no PRIVILEGED Supabase material reaches the
+    # browser. The service-role key bypasses row-level security entirely, so it
+    # must never appear as a key or as a value, in the config dict or in the
+    # rendered JavaScript.
+    assert "SUPABASE_SERVICE_ROLE_KEY" not in app_config
+    for key in app_config:
+        assert "service_role" not in key.lower(), (
+            f"Privileged Supabase field {key!r} leaked into frontend_app_config"
+        )
+    assert "service_role" not in js.lower()
+    assert "test-key-value" not in js, "service-role key value leaked into runtime-config.js"
+
+    # SUPABASE_URL and SUPABASE_ANON_KEY are deliberately published to the
+    # browser: the client SDK needs both to sign a user in, and the anon key is
+    # a public identifier whose access is constrained by row-level security.
+    # This test previously asserted that no key containing "supabase" appeared
+    # at all, which contradicted that design and failed for a value the product
+    # is required to expose. Only privileged material is asserted absent here.
+    assert app_config.get("SUPABASE_URL") == "https://example.supabase.co"
 
 
 def test_supabase_defaults_for_schema_and_timeout(tmp_path, load_module):
