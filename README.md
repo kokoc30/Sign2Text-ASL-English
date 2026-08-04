@@ -222,6 +222,16 @@ Two honest caveats, both explained in [`MODEL_RESULTS.md`](MODEL_RESULTS.md):
   either, and none are claimed.
 
 ---
+### Model Training
+
+The TensorBoard dashboard below shows the progression of training and validation Top-1 accuracy, Top-5 accuracy, and loss throughout training.
+
+<p align="center">
+  <img src="assets/images/tensorboard-training-metrics.png"
+       alt="TensorBoard training and validation metrics"
+       width="100%">
+</p>
+
 ### Training Progress
 
 The TensorBoard curves below show the model’s training and validation accuracy and loss throughout training.
