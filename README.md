@@ -38,20 +38,15 @@ Sign2Text approaches this as a full product rather than a model demo:
 
 ## Demo
 
-> **Note:** no demo video, hosted demo, or screenshots are included in this
-> repository yet. Rather than link to something that does not exist, these
-> placeholders are left for the author to fill in.
->
-> - **Demo video:** _to be added_
-> - **Live demo:** not published. The application needs a GPU-backed host, a
->   webcam, and third-party API credentials, so no public instance is running.
-> - **Screenshots:** _to be added under `assets/screenshots/`_
->
-> To see it working, follow [Running the main application](#running-the-main-application).
-> Voice mode, Letter mode, the admin dashboard, and the landing site all run
-> locally from this repository.
+The video below demonstrates the completed Sign2Text application, including
+real-time ASL recognition, English caption generation, Voice mode, and
+fingerspelling recognition.
 
----
+### Application Demo
+
+https://github.com/user-attachments/assets/ea1ec8eb-1e61-423a-afbe-ed9c862cf916
+
+
 
 ## Main features
 
