@@ -222,6 +222,11 @@ Two honest caveats, both explained in [`MODEL_RESULTS.md`](MODEL_RESULTS.md):
   either, and none are claimed.
 
 ---
+### Training Progress
+
+The TensorBoard curves below show the model’s training and validation accuracy and loss throughout training.
+
+![TensorBoard training and validation metrics](assets/images/tensorboard-training-metrics.png)
 
 ## Installation
 
