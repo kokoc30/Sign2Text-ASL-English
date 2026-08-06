@@ -184,7 +184,13 @@ recordings and real webcam conditions.
 Fingerspelling uses a much smaller model: a 3×256 MLP over 42-dimensional
 MediaPipe hand landmarks. A cross-signer variant subtracts the wrist position
 and normalises by palm size, which makes it invariant to where the hand sits in
-frame and how far the user is from the camera.
+frame and how far the user is from the camera. I benchmarked this replacement
+against the original logistic-regression classifier on an identical stratified
+split and selected the MLP on the result.
+
+The pipeline and training-framework code were written by Stepan Karapetyan; the
+training runs, experiments, evaluation, and checkpoint selection that produced
+the models described here were mine.
 
 Pipeline detail: [`docs/ml/PIPELINE.md`](docs/ml/PIPELINE.md) ·
 Vocabulary: [`docs/ml/SUPPORTED_SIGNS.md`](docs/ml/SUPPORTED_SIGNS.md)
@@ -213,13 +219,24 @@ Two honest caveats, both explained in [`MODEL_RESULTS.md`](MODEL_RESULTS.md):
 - **One internal figure was excluded.** A note in the project claimed a
   different accuracy for the word model, but no supporting artifact exists
   anywhere in the repository, so it is documented as unverified and is not used
-  as a result. No TensorBoard runs or confusion-matrix exports were retained
-  either, and none are claimed.
+  as a result. No confusion-matrix exports or per-class diagnostic files were
+  retained, and none are claimed.
+
+I ran the training jobs these numbers come from, monitored the runs, compared
+checkpoints, and verified every figure above against its stored artifact.
 
 ---
 ### Model Training
 
-The TensorBoard dashboard below shows the progression of training and validation Top-1 accuracy, Top-5 accuracy, and loss throughout training.
+I trained the published model variants, monitored optimization, and captured the
+dashboard below. It shows the progression of training and validation Top-1
+accuracy, Top-5 accuracy, and loss throughout a run.
+
+The image is a **screenshot of a TensorBoard dashboard**. TensorBoard smooths
+displayed curves by default, so values read off it are not the same as exact
+best-checkpoint metrics, and the raw event files are not published. The headline
+numbers in the table above come from checkpoint-embedded metrics and written
+evaluation notes, not from this image.
 
 <p align="center">
   <img src="assets/images/tensorboard-training-metrics.png"
@@ -346,7 +363,7 @@ python -m pytest        # the complete suite, including what CI deselects
 npx playwright test     # end-to-end browser tests
 ```
 
-The suite is 22 pytest modules and 8 Playwright specs, roughly 8,000 lines. It
+The suite is 22 pytest modules and 7 Playwright specs, roughly 8,000 lines. It
 covers runtime configuration and hardware profile resolution, launcher
 behaviour, the ASL event bus and transport status, inference helpers,
 letter-recognition endpoints, per-service authentication guards, translation and
@@ -429,9 +446,27 @@ satisfy the same interface, and they say so at the top of the file.
 
 ## My contributions
 
-I worked across the full product surface: the browser application, four of the
-Python services, the runtime configuration and launcher layer, the landing site,
-and the test suite.
+I worked across the full product surface as well as the machine-learning side of
+the project:
+
+- **Full-stack development** — the browser application, four of the Python
+  services, the runtime configuration and launcher tooling, and the landing site.
+- **Admin dashboard** — the token-guarded lead and feedback management surface.
+- **Testing and CI** — the pytest and Playwright suites and the GitHub Actions
+  workflows.
+- **Machine-learning training and evaluation** — I ran the training jobs,
+  monitored training and validation metrics, compared and selected checkpoints,
+  evaluated the resulting models, and verified every published result against its
+  source artifact.
+- **Documentation and public-release preparation** — including this sanitized
+  portfolio repository.
+
+An important distinction: the ASL recognition pipeline and the ML
+training-framework code were written by Stepan Karapetyan. **Training the models
+on that framework — the experiments, the runs, the monitoring, the checkpoint
+comparison and selection, and the evaluation — was my work.** Building a training
+framework and using it to produce trained models are two different jobs, and this
+repository credits them separately.
 
 A detailed, evidence-backed breakdown — including which parts were collaborative
 and which were built by teammates — is in
@@ -446,8 +481,8 @@ work, but the application it describes was not built alone.
 
 | Contributor | Contribution |
 | --- | --- |
-| **Koko Jamgotchian** | Backend services, web frontend, admin dashboard, landing site, runtime and launcher layer, test suite, documentation |
-| **Stepan Karapetyan** | ASL recognition pipeline and ML training framework, model training, Supabase auth module, letter model, mobile application |
+| **Koko Jamgotchian** | Full-stack development, backend services, web frontend, admin dashboard, landing site, runtime and launcher tooling, automated testing and CI, documentation, and the machine-learning work: training runs, experiments, evaluation, checkpoint selection, and results analysis |
+| **Stepan Karapetyan** | ASL recognition pipeline implementation, ML training-framework and architecture code, Supabase auth module, letter model loader, mobile application |
 | **Christopher Casas** | Mobile application |
 | **armbotzzz** | Project contributions |
 

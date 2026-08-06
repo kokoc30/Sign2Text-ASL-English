@@ -12,10 +12,17 @@ Sign2Text was built by a four-person team. **This public repository contains
 only the portions authored by Koko Jamgotchian.** Work by other team members
 remains their property and is not published here.
 
+Two different responsibilities are recorded separately below, because they were
+held by different people. **Writing the ML pipeline and training-framework code**
+was Stepan Karapetyan's work. **Running the training, conducting the experiments,
+monitoring optimization, comparing and selecting checkpoints, evaluating the
+resulting models, and verifying the reported results** was Koko Jamgotchian's
+work.
+
 | Contributor | Contribution | In this repository? |
 | --- | --- | --- |
-| **Koko Jamgotchian** | Backend services (ASL API, Voice/auth, Letter, Admin), web frontend, admin dashboard, landing site, runtime configuration and launcher, test suite, documentation | **Yes** |
-| **Stepan Karapetyan** | ASL recognition pipeline (`our_pipeline/`), ML training framework, model training, Supabase auth module, letter MLP loader, mobile app | **No** — excluded |
+| **Koko Jamgotchian** | Full-stack development: backend services (ASL API, Voice/auth, Letter, Admin), web frontend, admin dashboard, landing site, runtime configuration and launcher, test suite and CI, documentation. Machine learning: model training runs, experiments, training monitoring, checkpoint comparison and selection, evaluation, and results verification | **Yes** — source only; no weights or datasets |
+| **Stepan Karapetyan** | ASL recognition pipeline implementation (`our_pipeline/`), ML training-framework and architecture code, Supabase auth module, letter MLP loader, mobile app | **No** — excluded |
 | **Christopher Casas** | Mobile application | **No** — excluded |
 | **armbotzzz** | Project contributions | **No** — excluded |
 

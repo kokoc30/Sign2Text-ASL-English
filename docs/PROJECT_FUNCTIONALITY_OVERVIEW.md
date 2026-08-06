@@ -749,8 +749,8 @@ appearing complete.
 | Asset | Status |
 | --- | --- |
 | TensorBoard training screenshot | **Included** — [`assets/images/tensorboard-training-metrics.png`](../assets/images/tensorboard-training-metrics.png) |
+| Application demo video | **Available** — embedded in [`README.md`](../README.md) and hosted by GitHub user-attachments, not stored as a file in this repository |
 | Application screenshots | Not included |
-| Demo video | Not included |
 | Live/hosted demo | Not published |
 | Product thumbnail | Not included |
 | Raw TensorBoard event files, confusion matrices, per-class diagnostics | Not included |
@@ -766,14 +766,25 @@ such in their file headers.
 
 | Contributor | Area |
 | --- | --- |
-| **Koko Jamgotchian** | Backend services, web frontend, admin dashboard, landing site, runtime and launcher layer, test suite, documentation |
-| **Stepan Karapetyan** | ASL recognition pipeline and ML training framework, model training, Supabase auth module, letter MLP loader, mobile application |
+| **Koko Jamgotchian** | Full-stack development: backend services, web frontend, admin dashboard, landing site, runtime configuration and launcher tooling, automated testing and CI, documentation. Machine learning: model training runs, experiments, training monitoring, checkpoint comparison and selection, evaluation, and results verification |
+| **Stepan Karapetyan** | ASL recognition pipeline implementation, ML training-framework and model-architecture code, Supabase auth module, letter MLP loader, mobile application |
 | **Christopher Casas** | Mobile application |
 | **armbotzzz** | Project contributions |
 
-This overview makes no authorship claim over excluded work. The ASL recognition
-pipeline and its training framework were authored by Stepan Karapetyan; the published
-integration layer around them, and the gloss-to-English normalization path, were not.
+### Framework authorship vs. model training
+
+These are two different responsibilities, held by two different people, and this
+documentation keeps them apart:
+
+| Responsibility | Who | Published here? |
+| --- | --- | --- |
+| Writing the ASL pipeline implementation and the ML training-framework / architecture code | Stepan Karapetyan | No — excluded |
+| Preparing and running the training jobs, executing experiments, monitoring optimization, comparing and selecting checkpoints, evaluating models, capturing the TensorBoard dashboard, and verifying reported results | Koko Jamgotchian | Results and metadata only; weights excluded |
+| Integrating trained checkpoints into the live runtime, and the gloss-to-English normalization path ([`new_Inference.py`](../backend/new_Inference.py)) | Koko Jamgotchian | Yes |
+
+Building a training framework and using it to produce trained models are separate
+jobs. This overview makes no authorship claim over the excluded pipeline or
+framework code, and equally does not attribute the training work to its author.
 
 Detailed breakdown: [`MY_CONTRIBUTIONS.md`](../MY_CONTRIBUTIONS.md) · Full attribution
 including dependencies, datasets, and academic citations:
@@ -791,10 +802,14 @@ each case.
 | --- | --- | --- |
 | Curated vocabulary size: 604 vs 600 | `curated600_vocab.json` has 600 entries; the training config head is `out_dim: 600`. "604" appears only in a YAML comment | 600, with the discrepancy flagged |
 | Keypoint count: 86 vs 133 | `new_Inference.py` sets `NUM_KPTS = 133` (COCO-WholeBody); the curated config uses `mediapipe86` | Both — they belong to different pipelines ([§9](#9-machine-learning-pipeline)) |
-| "Letter mode runs from this repository" | `backend/letter_mlp.py` is absent; `TESTING_STATUS.md` marks two tests for this reason | Letter mode does not start ([§5.3](#53-letter-mode)) |
-| "No TensorBoard runs were retained" | `assets/images/tensorboard-training-metrics.png` exists | A dashboard screenshot exists; raw event files do not ([§11](#11-tensorboard-training-visualization)) |
-| Playwright spec count: 8 vs 7 | `tests_e2e/` contains 7 `*.spec.ts` files plus one shared helper module | 7 specs |
-| Cross-references to a README section titled *"What is and isn't in this repository"* | The README's section is titled **"Known public-release limitations"** | Links point to current section names |
+| "Letter mode runs from this repository" (`README.md`) | `backend/letter_mlp.py` is absent; `TESTING_STATUS.md` marks two tests for this reason | Letter mode does not start ([§5.3](#53-letter-mode)) |
+| Cross-references to a README section titled *"What is and isn't in this repository"* (`PROJECT_STRUCTURE.md`, `docs/README.md`, `our_pipeline/` headers) | The README's section is titled **"Known public-release limitations"** | Links point to current section names |
+| `MY_CONTRIBUTIONS.md` previously reported a stale test result | Superseded by the marker-scoped run reproduced in [§18](#18-testing-and-ci) | 288 passed, 41 deselected |
+
+Resolved since the previous revision: the "no TensorBoard runs were retained" claim
+(corrected in [`README.md`](../README.md) and [`MODEL_RESULTS.md`](../MODEL_RESULTS.md)
+now that a dashboard screenshot is published), the duplicated TensorBoard block in the
+README, and the Playwright spec count.
 
 ---
 

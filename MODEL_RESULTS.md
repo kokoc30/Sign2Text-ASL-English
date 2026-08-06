@@ -4,9 +4,16 @@ Every figure below is traceable to a specific artifact. Where a number could
 not be verified against a stored artifact, it is listed as unverified and is
 **not** used anywhere else in this repository.
 
+**Attribution.** The ML pipeline and training-framework code were written by
+Stepan Karapetyan. The training runs, experiments, training monitoring,
+checkpoint comparison and selection, evaluation, and the verification of every
+result recorded below were carried out by Koko Jamgotchian. See
+[`MY_CONTRIBUTIONS.md`](MY_CONTRIBUTIONS.md) and
+[`THIRD_PARTY_ATTRIBUTION.md`](THIRD_PARTY_ATTRIBUTION.md).
+
 No model weights are distributed here — see
 [`COPYRIGHT.md`](COPYRIGHT.md) and the README section
-*"What is and isn't in this repository."*
+*"Known public-release limitations."*
 
 ---
 
@@ -168,11 +175,24 @@ in this repository.
 
 ---
 
-## Artifacts not available
+## Artifacts published and not published
 
-For full transparency: this project has **no TensorBoard runs, confusion
-matrix exports, or per-class diagnostic CSVs** retained. Training was performed
-on separate infrastructure and those artifacts were not preserved alongside the
-checkpoints. The metrics above come from values embedded in the checkpoint
-files themselves and from evaluation notes written at training time, which is
-the strongest evidence still available.
+**Published.** A TensorBoard dashboard screenshot captured during training is
+included at
+[`assets/images/tensorboard-training-metrics.png`](assets/images/tensorboard-training-metrics.png).
+It shows training and validation Top-1 accuracy, Top-5 accuracy, and loss over a
+run. TensorBoard smooths displayed curves by default, so values read off the
+image are not the same as exact best-checkpoint metrics — the screenshot is
+evidence that the runs were instrumented and monitored, not the source of any
+number in this document.
+
+**Not published.** The raw TensorBoard event files, confusion-matrix exports, and
+per-class diagnostic CSVs were not preserved alongside the checkpoints, and the
+trained weights themselves are excluded for licensing reasons. The metrics above
+therefore come from values embedded in the checkpoint files and from evaluation
+notes written at training time, which is the strongest evidence still available.
+
+Training ran on separate infrastructure. The runs, monitoring, checkpoint
+selection, and evaluation behind these figures were performed by Koko
+Jamgotchian; the framework the runs executed on was written by Stepan
+Karapetyan.

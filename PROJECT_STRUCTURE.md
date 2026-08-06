@@ -78,7 +78,7 @@ Sign2Text/
 │   └── src/styles.css
 │
 ├── tests/                         22 pytest modules
-├── tests_e2e/                     8 Playwright specs
+├── tests_e2e/                     7 Playwright specs
 ├── tools/                         SQLite → Supabase migration
 │
 └── docs/
