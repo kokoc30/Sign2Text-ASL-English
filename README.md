@@ -499,13 +499,36 @@ academic citations are listed in
 
 ---
 
+## Forking and contributions
+
+Have an improvement in mind? **Fork this repository, make your changes, and open
+an upstream pull request.** We welcome focused bug fixes, accessibility
+improvements, tests, and documentation updates. See
+[`CONTRIBUTING.md`](CONTRIBUTING.md) for the development and review process.
+
+Please preserve the original copyright and contributor credits, and link back to
+[this repository](https://github.com/kokoc30/Sign2Text-ASL-English) in any
+permitted public fork. A fork is not an endorsement, and acceptance of a pull
+request is at the maintainers' discretion.
+
+**Usage note:** Limited non-commercial permission is granted for GitHub forks,
+local evaluation and development, and proposing changes under
+[`COPYRIGHT.md`](COPYRIGHT.md). This is still a **source-available portfolio
+project, not an open-source software release**. Commercial use, independent
+redistribution, and production deployment require separate written permission.
+
+---
+
 ## Copyright and usage notice
 
-**Copyright © 2026 Sign2Text contributors. All rights reserved.**
+**Copyright © 2026 Sign2Text contributors. All rights reserved except for the
+limited permissions in [`COPYRIGHT.md`](COPYRIGHT.md).**
 
-This repository is provided for portfolio review, educational demonstration, and
-evaluation purposes. No permission is granted to copy, modify, redistribute,
-sublicense, or use the source code commercially without written permission from
-the applicable copyright holders.
+You may view and evaluate this public code, fork it on GitHub, and develop
+non-commercial improvements under the limited collaboration permission in
+[`COPYRIGHT.md`](COPYRIGHT.md). Please submit proposed changes as pull requests
+and preserve the attribution notices. Other reproduction, redistribution,
+sublicensing, or commercial use requires written permission from the applicable
+copyright holders.
 
 It is source-available, not open-source. Full terms: [`COPYRIGHT.md`](COPYRIGHT.md)
