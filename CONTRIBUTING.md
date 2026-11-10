@@ -4,6 +4,18 @@ Welcome to the **Sign2Text** project! This document provides guidelines for futu
 
 ---
 
+## Fork and pull request workflow
+
+1. Select **Fork** on [the original Sign2Text repository](https://github.com/kokoc30/Sign2Text-ASL-English).
+2. Create a focused branch in your fork for the proposed improvement.
+3. Make and test your change. Keep existing copyright and contributor attribution intact.
+4. Open a pull request back to `kokoc30/Sign2Text-ASL-English` with a description of the change and the tests you ran.
+5. Respond to review feedback. Changes are merged only at the maintainers' discretion.
+
+Please do not upload excluded model weights, private datasets, credentials, or private team-owned modules. This is a **source-available** repository, not an open-source project. The limited permissions for non-commercial development and GitHub forks are in [`COPYRIGHT.md`](COPYRIGHT.md). Submitting a pull request does not guarantee acceptance.
+
+---
+
 ## 🏛️ Project Structure Awareness
 
 Sign2Text is a **multi-service, multi-surface** application. Before making changes, you must understand that several independent surfaces are tightly coupled through a shared routing layer and configuration.
